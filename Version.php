@@ -17,27 +17,72 @@ class Version
     /** @var string $tag current tag */
     public $tag;
 
+    /** @var string $path */
+    public $path;
+
     /**
      * @method __construct
      */
-    public function __construct()
+    public function __construct($path = null)
     {
+        $this->path = $path;
         $this->load();
     }
 
 
     private function load()
     {
-        exec('git branch', $branch);
-        exec('git describe --tags', $tag);
-        $this->branch = isset($branch[0]) ? $branch[0] : '';
-        $this->tag = isset($tag[0]) ? $tag[0] : $this->branch ;
-        exec('git rev-list HEAD | wc -l', $gitCommits);
-        $this->commitsCount = intval($gitCommits);
+        $branch = $this->getCommandResult("git branch");
+        $this->branch = !empty($branch) ? $branch : '';
+
+        $tag = $this->getCommandResult("git describe --tags");
+        $this->tag = isset($tag) ? $tag : $this->branch ;
+
+        if (!empty($this->path)) {
+            exec('git rev-list HEAD | wc -l', $gitCommits);
+            $this->commitsCount = intval($gitCommits);
+        }
+
         exec('git log -1', $gitHashLong);
-        $this->commit = $gitHashLong;
+        $this->commit = $this->getCommandResult("git log -1");
     }
 
+    /**
+     * @return bool|string
+     */
+    private function getCommandResult(string $command)
+    {
+        $path = $this->path;
+        if (!empty($path) && !\is_dir($path . DIRECTORY_SEPARATOR . '.git')) {
+            return false;
+        }
+
+        $pipeConf = [1 => ['pipe', 'w']];
+        if (!empty($path)) {
+            $pipeConf[2] = ['pipe', 'w'];
+        }
+        $process = \proc_open(
+            $command,
+            $pipeConf,
+            $pipes,
+            $path
+        );
+
+        if (!\is_resource($process)) {
+            return false;
+        }
+        $result = \trim(\stream_get_contents($pipes[1]));
+        \fclose($pipes[1]);
+
+        if (!empty($path)) {
+            \fclose($pipes[2]);
+        }
+        $returnCode = \proc_close($process);
+        if ($returnCode !== 0) {
+            return false;
+        }
+        return $result;
+    }
 
 
 
