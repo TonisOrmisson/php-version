@@ -50,7 +50,7 @@ class Version
     /**
      * @return bool|string
      */
-    private function getCommandResult(string $command)
+    private function getCommandResult($command)
     {
         $path = $this->path;
         if (!empty($path) && !\is_dir($path . DIRECTORY_SEPARATOR . '.git')) {
