@@ -20,6 +20,15 @@ class Version
     /** @var string $path */
     public $path;
 
+    /** @var string $author */
+    public $author = "";
+
+    /** @var string $subject */
+    public $subject = "";
+
+    /** @var string $time */
+    public $time = "";
+
     /**
      * @method __construct
      */
@@ -45,6 +54,13 @@ class Version
 
         exec('git log -1', $gitHashLong);
         $this->commit = $this->getCommandResult("git log -1");
+
+        if(!empty($this->tag)) {
+            $this->author = $this->getCommandResult("git show {$this->tag} --no-patch --format=format:'%an'");
+            $this->time = $this->getCommandResult("git show {$this->tag} --no-patch --format=format:'%ad'");
+            $this->subject = $this->getCommandResult("git show {$this->tag} --no-patch --format=format:'%s'");
+        }
+
     }
 
     /**
