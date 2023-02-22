@@ -8,7 +8,7 @@ class Version
     /** @var integer $commitsCount $latest commit */
     public $commitsCount;
 
-    /** @var string $commit $latest commit */
+    /** @var string|array $commit $latest commit */
     public $commit;
 
     /** @var string $tag current tag */
